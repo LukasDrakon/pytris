@@ -1,12 +1,10 @@
 import pygame
 import random
-# Initialize Pygame
-pygame.init()
 
-# Set the display mode
+pygame.init()
 screen = pygame.display.set_mode((800, 600))
 grid_color = (128, 128, 128)
-# Define the different Tetris pieces
+
 O = [[0, 0, 0, 0],
      [0, 1, 1, 0],
      [0, 1, 1, 0],
@@ -30,8 +28,6 @@ I = [[0, 0, 0, 0],
      [1, 1, 1, 1],
      [0, 0, 0, 0],
      [0, 0, 0, 0]]
-
-# Define the different Tetris colors
 
 colors = {
     (255, 255, 0): 1,
@@ -85,14 +81,6 @@ def check_collision(x, y):
                     return True
     return False
 
-def check_collision_y(x, y):
-    for i in range(len(current_piece)):
-        for j in range(len(current_piece[0])):
-            if current_piece[i][j] != 0:
-                if (y+i >= 20) or (game_board[y+i][x+j] != 0):  
-                    return True
-    return False
-
 def lock_piece():
     global current_piece_x, current_piece_y, current_rotation
     for i in range(len(current_piece)):
@@ -102,12 +90,11 @@ def lock_piece():
     current_rotation = 0
 
 def new_piece():
-    global current_piece, current_color, current_piece_x, current_piece_y
-    current_piece = next_piece()
-    current_color = colors[random.choice(list(colors.keys()))]
-    # Starting position
+    global current_piece, current_color, current_piece_x, current_piece_y, current_rotation
     current_piece_x = 3
     current_piece_y = -1
+    current_piece = next_piece()
+    current_color = colors[random.choice(list(colors.keys()))]
     for i in range(current_rotation):
         rotate(current_piece, 'left')
     if check_collision(current_piece_x, current_piece_y):
@@ -117,6 +104,7 @@ def rotate(matrix, direction):
     global current_rotation
     N = len(matrix[0])
     if direction == 'right':
+        current_rotation += 1
         for x in range(int(N/2)):
             for y in range(x, N-x-1):
                 temp = matrix[x][y]
@@ -124,8 +112,8 @@ def rotate(matrix, direction):
                 matrix[N-1-y][x] = matrix[N-1-x][N-1-y]
                 matrix[N-1-x][N-1-y] = matrix[y][N-1-x]
                 matrix[y][N-1-x] = temp
-        current_rotation += 1
     elif direction == 'left':
+        current_rotation -= 1
         for x in range(int(N/2)):
             for y in range(x, N-x-1):
                 temp = matrix[N-1-y][x]
@@ -133,42 +121,16 @@ def rotate(matrix, direction):
                 matrix[x][y] = matrix[y][N-1-x]
                 matrix[y][N-1-x] = matrix[N-1-x][N-1-y]
                 matrix[N-1-x][N-1-y] = temp
-        current_rotation -= 1
 
 fall_interval = 1000
 pygame.time.set_timer(pygame.USEREVENT + 1, fall_interval)
-pygame.key.set_repeat(100, 100)
+pygame.key.set_repeat(500, 100)
 
 running = True
 while running:
 
-
-
     prev_current_piece_x = current_piece_x
     prev_current_piece_y = current_piece_y
-
-    
-# Clear the screen
-    screen.fill((0, 0, 0))
-
-# Draw the game board
-    for y in range(20):
-         for x in range(10):
-            if game_board[y][x] != 0:
-                pygame.draw.rect(screen, color_mapping[game_board[y][x]], (x*block_size, y*block_size, block_size, block_size))
-
-    for x in range(0, 10 * block_size, block_size):
-        pygame.draw.line(screen, grid_color, (x, 0), (x, 20 * block_size))
-    for y in range(0, 20 * block_size, block_size):
-        pygame.draw.line(screen, grid_color, (0, y), (10 * block_size, y))
-# Draw the current piece
-    for y in range(len(current_piece)):
-        for x in range(len(current_piece[y])):
-            if current_piece[y][x] != 0:
-                pygame.draw.rect(screen, color_mapping[current_color], ( (current_piece_x+x)*block_size, (current_piece_y+y)*block_size, block_size, block_size))
-
-#Update the screen
-    screen.blit(text, (650, 550))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -189,18 +151,12 @@ while running:
             current_piece_y += 1
 
 
-    
-    # Check if the current piece has landed on another piece or the bottom of the screen
     if check_collision(current_piece_x, current_piece_y):
-    # Lock the current piece in place
         current_piece_x = prev_current_piece_x
-        if check_collision_y(current_piece_x, current_piece_y):
-            current_piece_y = prev_current_piece_y
-            lock_piece()
-    # Get a new random piece
-            new_piece()
-        else:
-            current_piece_y = prev_current_piece_y
+    if check_collision(current_piece_x, current_piece_y):
+        current_piece_y = prev_current_piece_y
+        lock_piece()
+        new_piece()
 
 
     for row in range(-2, 20):
@@ -213,6 +169,29 @@ while running:
             for r in range(row, 0, -1):
                 game_board[r] = game_board[r-1]
             game_board[0] = [0] * 10
+
+
+    screen.fill((0, 0, 0))
+
+# Draw the game board
+    for y in range(20):
+         for x in range(10):
+            if game_board[y][x] != 0:
+                pygame.draw.rect(screen, color_mapping[game_board[y][x]], (x*block_size, y*block_size, block_size, block_size))
+
+    for x in range(0, 10 * block_size, block_size):
+        pygame.draw.line(screen, grid_color, (x, 0), (x, 20 * block_size))
+    for y in range(0, 20 * block_size, block_size):
+        pygame.draw.line(screen, grid_color, (0, y), (10 * block_size, y))
+# Draw the current piece
+    for y in range(len(current_piece)):
+        for x in range(len(current_piece[y])):
+            if current_piece[y][x] != 0:
+                pygame.draw.rect(screen, color_mapping[current_color], ( (current_piece_x+x)*block_size, (current_piece_y+y)*block_size, block_size, block_size))
+
+
+
+    screen.blit(text, (650, 550))
     pygame.display.flip()
     pygame.display.update()
     
